@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Circle, Flame, Trash2, MoreVertical, MessageSquare } from 'lucide-react';
+import { CheckCircle2, Circle, Flame, MoreVertical, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Habit } from '../lib/types';
 import { cn } from '../lib/utils';
@@ -9,7 +9,6 @@ interface HabitCardProps {
   isCompleted: boolean;
   hasNoteToday?: boolean;
   onToggle: () => void;
-  onDelete: () => void;
   onShowDetails: () => void;
 }
 
@@ -18,7 +17,6 @@ const HabitCard: React.FC<HabitCardProps> = ({
   isCompleted, 
   hasNoteToday,
   onToggle, 
-  onDelete,
   onShowDetails
 }) => {
   return (

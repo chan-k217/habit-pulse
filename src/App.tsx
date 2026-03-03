@@ -4,12 +4,8 @@ import {
   Settings as SettingsIcon, 
   BarChart2, 
   Calendar, 
-  CheckCircle2, 
-  Circle, 
-  Flame, 
   ChevronRight,
   Search,
-  MoreHorizontal,
   Bell,
   Sparkles,
   LogOut
@@ -471,7 +467,6 @@ const App: React.FC = () => {
                           isCompleted={!!todayLog}
                           hasNoteToday={!!todayLog?.note}
                           onToggle={() => toggleHabit(habit.id)}
-                          onDelete={() => deleteHabit(habit.id)}
                           onShowDetails={() => setSelectedHabit(habit)}
                         />
                       );
@@ -484,7 +479,7 @@ const App: React.FC = () => {
         ) : activeTab === 'analytics' ? (
           <Analytics habits={habits} logs={logs} />
         ) : (
-          <Settings habits={habits} logs={logs} onClearData={clearAllData} />
+          <Settings habits={habits} logs={logs} onClearData={clearAllData} session={session} />
         )}
       </main>
 

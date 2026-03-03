@@ -12,8 +12,7 @@ import {
 import { Habit, HabitLog } from '../lib/types';
 import { getCompletionStats, getLastNDays } from '../lib/utils';
 import { motion } from 'motion/react';
-import { TrendingUp, Award, Calendar, Flame, Grid } from 'lucide-react';
-import { format, subDays } from 'date-fns';
+import { TrendingUp, Award, Grid, Flame, Calendar } from 'lucide-react';
 
 interface AnalyticsProps {
   habits: Habit[];
@@ -147,7 +146,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ habits, logs }) => {
         <div className="space-y-4">
           {categoryData.length === 0 ? (
             <p className="text-center py-8 text-zinc-400 text-sm italic">No data yet</p>
-          ) : categoryData.map((item, i) => (
+          ) : categoryData.map((item) => (
             <div key={item.name} className="space-y-2">
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-zinc-600">{item.name}</span>

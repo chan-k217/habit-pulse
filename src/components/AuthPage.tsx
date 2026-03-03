@@ -39,7 +39,8 @@ const AuthPage: React.FC = () => {
                 }
               }
             }}
-            providers={['google', 'github']}
+            providers={['google']}
+            redirectTo={window.location.origin}
             theme="light"
           />
         </div>

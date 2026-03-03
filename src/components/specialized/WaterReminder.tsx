@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, Droplets } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { format } from 'date-fns';
 
 interface WaterReminderProps {
   currentValue: number;

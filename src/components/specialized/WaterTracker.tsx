@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React from 'react';
+import { motion } from 'motion/react';
 import { Droplets, GlassWater, Info } from 'lucide-react';
 import { cn } from '../../lib/utils';
 

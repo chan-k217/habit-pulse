@@ -6,14 +6,12 @@ import {
   TrendingUp, 
   Trash2, 
   Edit3,
-  CheckCircle2,
-  Circle,
   MessageSquare,
   Save
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Habit, HabitLog } from '../lib/types';
-import { format, subDays, isSameDay, parseISO } from 'date-fns';
+import { format, subDays, parseISO } from 'date-fns';
 import { cn } from '../lib/utils';
 
 import WaterTracker from './specialized/WaterTracker';

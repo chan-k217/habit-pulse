@@ -10,13 +10,15 @@ import {
   CreditCard,
   ExternalLink
 } from 'lucide-react';
-import { motion } from 'motion/react';
 import { Habit, HabitLog } from '../lib/types';
+import { supabase } from '../lib/supabase';
+import { Session } from '@supabase/supabase-js';
 
 interface SettingsProps {
   habits: Habit[];
   logs: HabitLog[];
   onClearData: () => void;
+  session: Session | null;
 }
 
 interface SettingsItem {
@@ -35,7 +37,13 @@ interface SettingsSection {
   items: SettingsItem[];
 }
 
-const Settings: React.FC<SettingsProps> = ({ habits, logs, onClearData }) => {
+const Settings: React.FC<SettingsProps> = ({ habits, logs, onClearData, session }) => {
+  const userEmail = session?.user.email || 'User';
+  const userInitial = userEmail.substring(0, 2).toUpperCase();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
   const exportData = () => {
     const data = {
       habits,
@@ -101,11 +109,11 @@ const Settings: React.FC<SettingsProps> = ({ habits, logs, onClearData }) => {
       {/* Profile Header */}
       <div className="flex items-center gap-4 p-2">
         <div className="w-16 h-16 rounded-[24px] bg-indigo-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-indigo-200">
-          JD
+          {userInitial}
         </div>
         <div>
-          <h2 className="text-xl font-bold text-zinc-900">John Doe</h2>
-          <p className="text-sm text-zinc-500 font-medium">Pro Member since 2024</p>
+          <h2 className="text-xl font-bold text-zinc-900">{userEmail}</h2>
+          <p className="text-sm text-zinc-500 font-medium">Member since {new Date(session?.user.created_at || '').getFullYear() || 2024}</p>
         </div>
       </div>
 
@@ -159,7 +167,10 @@ const Settings: React.FC<SettingsProps> = ({ habits, logs, onClearData }) => {
         <button className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1">
           Terms of Service <ExternalLink size={10} />
         </button>
-        <button className="text-[10px] font-bold text-red-400 uppercase tracking-widest flex items-center gap-1">
+        <button 
+          onClick={handleLogout}
+          className="text-[10px] font-bold text-red-400 uppercase tracking-widest flex items-center gap-1"
+        >
           Log Out <LogOut size={10} />
         </button>
       </div>

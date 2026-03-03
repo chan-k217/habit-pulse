@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Dumbbell, Timer, Flame, CheckCircle2, Circle, Activity } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Dumbbell, Timer, Flame, CheckCircle2, Activity } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface GymTrackerProps {
