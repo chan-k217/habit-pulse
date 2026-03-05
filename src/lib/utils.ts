@@ -45,7 +45,7 @@ export function calculateStreak(logs: LogEntry[]): number {
   }
 
   let streak = 0;
-  let checkDate = latestLogDate;
+  const checkDate = latestLogDate;
 
   for (const dateStr of uniqueDates) {
     const logDate = new Date(dateStr);
@@ -76,7 +76,7 @@ export function getLastNDays(n: number) {
   return dates;
 }
 
-export function getCompletionStats(habits: any[], logs: any[], days: number = 7) {
+export function getCompletionStats(habits: { id: string }[], logs: { habitId: string, date: string }[], days: number = 7) {
   const lastDays = getLastNDays(days);
   return lastDays.map(date => {
     const dayLogs = logs.filter(l => l.date === date);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Habit } from '../lib/types';
 import { HABIT_COLORS } from '../lib/utils';
 
@@ -18,11 +18,13 @@ const QuickAdd: React.FC<QuickAddProps> = ({ onAdd }) => {
       id: crypto.randomUUID(),
       title: title.trim(),
       type: 'boolean',
+      category: 'lifestyle',
       targetValue: 1,
       frequency: 'daily',
       color: HABIT_COLORS[Math.floor(Math.random() * HABIT_COLORS.length)],
       createdAt: Date.now(),
-      streak: 0
+      streak: 0,
+      xp: 0
     };
 
     onAdd(newHabit);

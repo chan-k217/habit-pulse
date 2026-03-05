@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Dumbbell, Timer, Flame, CheckCircle2, Activity } from 'lucide-react';
+import { Dumbbell, Timer, Flame, CheckCircle2, Activity, Plus, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface GymTrackerProps {
-  onUpdate: (data: { muscleGroups: string[], cardioMinutes: number, weightMinutes: number }) => void;
-  initialData?: { muscleGroups: string[], cardioMinutes: number, weightMinutes: number };
+  onUpdate: (data: { muscleGroups: string[], cardioMinutes: number, weightMinutes: number, intensity: string, exercises: string[] }) => void;
+  initialData?: Record<string, unknown>;
 }
 
 const MUSCLE_GROUPS = [
@@ -18,26 +18,67 @@ const MUSCLE_GROUPS = [
 ];
 
 const GymTracker: React.FC<GymTrackerProps> = ({ onUpdate, initialData }) => {
-  const [selectedMuscles, setSelectedMuscles] = useState<string[]>(initialData?.muscleGroups || []);
-  const [cardioMinutes, setCardioMinutes] = useState<number>(initialData?.cardioMinutes || 0);
-  const [weightMinutes, setWeightMinutes] = useState<number>(initialData?.weightMinutes || 0);
+  const muscleGroups = Array.isArray(initialData?.muscleGroups) ? initialData.muscleGroups as string[] : [];
+  const cardioMinutes = typeof initialData?.cardioMinutes === 'number' ? initialData.cardioMinutes : 0;
+  const weightMinutes = typeof initialData?.weightMinutes === 'number' ? initialData.weightMinutes : 0;
+  const intensity = typeof initialData?.intensity === 'string' ? initialData.intensity : 'Medium';
+  const exercises = Array.isArray(initialData?.exercises) ? initialData.exercises as string[] : [];
+
+  const [selectedMuscles, setSelectedMuscles] = useState<string[]>(muscleGroups);
+  const [currentCardioMinutes, setCurrentCardioMinutes] = useState<number>(cardioMinutes);
+  const [currentWeightMinutes, setCurrentWeightMinutes] = useState<number>(weightMinutes);
+  const [currentIntensity, setCurrentIntensity] = useState<string>(intensity);
+  const [currentExercises, setCurrentExercises] = useState<string[]>(exercises);
+  const [newExercise, setNewExercise] = useState('');
 
   const toggleMuscle = (id: string) => {
     const newMuscles = selectedMuscles.includes(id)
       ? selectedMuscles.filter(m => m !== id)
       : [...selectedMuscles, id];
     setSelectedMuscles(newMuscles);
-    onUpdate({ muscleGroups: newMuscles, cardioMinutes, weightMinutes });
+    onUpdate({ 
+      muscleGroups: newMuscles, 
+      cardioMinutes: currentCardioMinutes, 
+      weightMinutes: currentWeightMinutes,
+      intensity: currentIntensity,
+      exercises: currentExercises
+    });
   };
 
   const handleCardioChange = (val: number) => {
-    setCardioMinutes(val);
-    onUpdate({ muscleGroups: selectedMuscles, cardioMinutes: val, weightMinutes });
+    setCurrentCardioMinutes(val);
+    onUpdate({ 
+      muscleGroups: selectedMuscles, 
+      cardioMinutes: val, 
+      weightMinutes: currentWeightMinutes,
+      intensity: currentIntensity,
+      exercises: currentExercises
+    });
   };
 
   const handleWeightChange = (val: number) => {
-    setWeightMinutes(val);
-    onUpdate({ muscleGroups: selectedMuscles, cardioMinutes, weightMinutes: val });
+    setCurrentWeightMinutes(val);
+    onUpdate({ 
+      muscleGroups: selectedMuscles, 
+      cardioMinutes: currentCardioMinutes, 
+      weightMinutes: val,
+      intensity: currentIntensity,
+      exercises: currentExercises
+    });
+  };
+
+  const addExercise = () => {
+    if (!newExercise.trim()) return;
+    const updated = [...currentExercises, newExercise.trim()];
+    setCurrentExercises(updated);
+    setNewExercise('');
+    onUpdate({
+      muscleGroups: selectedMuscles,
+      cardioMinutes: currentCardioMinutes,
+      weightMinutes: currentWeightMinutes,
+      intensity: currentIntensity,
+      exercises: updated
+    });
   };
 
   return (
@@ -88,6 +129,80 @@ const GymTracker: React.FC<GymTrackerProps> = ({ onUpdate, initialData }) => {
         </div>
       </div>
 
+      {/* Intensity Selection */}
+      <div className="space-y-4">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Workout Intensity</h4>
+        <div className="flex gap-2">
+          {['Low', 'Medium', 'High', 'Extreme'].map((level) => (
+            <button
+              key={level}
+              onClick={() => {
+                setCurrentIntensity(level);
+                onUpdate({ 
+                  muscleGroups: selectedMuscles, 
+                  cardioMinutes: currentCardioMinutes, 
+                  weightMinutes: currentWeightMinutes,
+                  intensity: level,
+                  exercises: currentExercises
+                });
+              }}
+              className={cn(
+                "flex-1 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border-2",
+                currentIntensity === level 
+                  ? "bg-orange-600 border-orange-600 text-white" 
+                  : "bg-zinc-800 border-zinc-700 text-zinc-500"
+              )}
+            >
+              {level}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Exercises List */}
+      <div className="space-y-4">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Exercises / Reps</h4>
+        <div className="space-y-2">
+          {currentExercises.map((ex, i) => (
+            <div key={i} className="flex items-center justify-between bg-zinc-800 p-3 rounded-xl border border-zinc-700">
+              <span className="text-sm font-medium text-zinc-200">{ex}</span>
+              <button 
+                onClick={() => {
+                  const updated = currentExercises.filter((_, idx) => idx !== i);
+                  setCurrentExercises(updated);
+                  onUpdate({
+                    muscleGroups: selectedMuscles,
+                    cardioMinutes: currentCardioMinutes,
+                    weightMinutes: currentWeightMinutes,
+                    intensity: currentIntensity,
+                    exercises: updated
+                  });
+                }}
+                className="text-zinc-500 hover:text-red-500"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <input 
+              type="text"
+              placeholder="e.g. Bench Press 3x10"
+              value={newExercise}
+              onChange={(e) => setNewExercise(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addExercise()}
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            />
+            <button 
+              onClick={addExercise}
+              className="w-10 h-10 bg-orange-600 text-white rounded-xl flex items-center justify-center"
+            >
+              <Plus size={20} />
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Duration Tracking */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-3">
@@ -97,14 +212,14 @@ const GymTracker: React.FC<GymTrackerProps> = ({ onUpdate, initialData }) => {
           </div>
           <div className="flex items-center gap-3">
              <button 
-                onClick={() => handleCardioChange(Math.max(0, cardioMinutes - 5))}
+                onClick={() => handleCardioChange(Math.max(0, currentCardioMinutes - 5))}
                 className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 hover:bg-zinc-700"
              >
                -
              </button>
-             <span className="text-xl font-black">{cardioMinutes}</span>
+             <span className="text-xl font-black">{currentCardioMinutes}</span>
              <button 
-                onClick={() => handleCardioChange(cardioMinutes + 5)}
+                onClick={() => handleCardioChange(currentCardioMinutes + 5)}
                 className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 hover:bg-zinc-700"
              >
                +
@@ -119,14 +234,14 @@ const GymTracker: React.FC<GymTrackerProps> = ({ onUpdate, initialData }) => {
           </div>
           <div className="flex items-center gap-3">
              <button 
-                onClick={() => handleWeightChange(Math.max(0, weightMinutes - 5))}
+                onClick={() => handleWeightChange(Math.max(0, currentWeightMinutes - 5))}
                 className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 hover:bg-zinc-700"
              >
                -
              </button>
-             <span className="text-xl font-black">{weightMinutes}</span>
+             <span className="text-xl font-black">{currentWeightMinutes}</span>
              <button 
-                onClick={() => handleWeightChange(weightMinutes + 5)}
+                onClick={() => handleWeightChange(currentWeightMinutes + 5)}
                 className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 hover:bg-zinc-700"
              >
                +
@@ -143,13 +258,13 @@ const GymTracker: React.FC<GymTrackerProps> = ({ onUpdate, initialData }) => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Total Duration</p>
-            <p className="text-lg font-black">{cardioMinutes + weightMinutes} min</p>
+            <p className="text-lg font-black">{currentCardioMinutes + currentWeightMinutes} min</p>
           </div>
         </div>
         <div className="text-right">
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Intensity</p>
           <p className="text-lg font-black text-orange-500">
-            {selectedMuscles.length > 3 ? 'High' : selectedMuscles.length > 1 ? 'Medium' : 'Low'}
+            {currentIntensity}
           </p>
         </div>
       </div>

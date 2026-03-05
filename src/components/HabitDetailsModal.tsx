@@ -24,7 +24,7 @@ interface HabitDetailsModalProps {
   onEdit: () => void;
   onDelete: () => void;
   onUpdateLog: (logId: string, note: string) => Promise<void>;
-  onUpdateLogValue: (habitId: string, value: number, metadata?: any) => Promise<void>;
+  onUpdateLogValue: (habitId: string, value: number, metadata?: Record<string, unknown>, date?: string) => Promise<void>;
 }
 
 const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({ 
@@ -39,9 +39,9 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const [noteValue, setNoteValue] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const todayLog = logs.find(l => l.habitId === habit.id && l.date === todayStr);
+  const activeLog = logs.find(l => l.habitId === habit.id && l.date === selectedDate);
 
   const last30Days = Array.from({ length: 30 }, (_, i) => subDays(new Date(), i));
   const habitLogs = logs
@@ -98,6 +98,20 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
           </button>
         </div>
 
+        {/* Date Selector */}
+        <div className="flex items-center justify-between mb-6 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+          <div className="flex items-center gap-3">
+            <Calendar className="text-zinc-400" size={18} />
+            <span className="text-sm font-bold text-zinc-900">Logging for:</span>
+          </div>
+          <input 
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="bg-white border border-zinc-200 rounded-xl px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
@@ -116,39 +130,74 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
           </div>
         </div>
 
-        {/* Specialized Trackers */}
+        {/* Specialized Trackers or Quick Log */}
         <div className="mb-8">
-          {habit.title.toLowerCase().includes('water') && (
+          {habit.title.toLowerCase().includes('water') ? (
             <WaterTracker 
-              currentValue={todayLog?.value || 0}
+              currentValue={activeLog?.value || 0}
               targetValue={habit.targetValue || 3}
-              onUpdate={(val) => onUpdateLogValue(habit.id, val)}
+              onUpdate={(val) => onUpdateLogValue(habit.id, val, undefined, selectedDate)}
             />
-          )}
-          {habit.title.toLowerCase().includes('gym') && (
+          ) : habit.title.toLowerCase().includes('gym') ? (
             <GymTracker 
-              initialData={todayLog?.metadata as any}
-              onUpdate={(data) => onUpdateLogValue(habit.id, 1, data)}
+              initialData={activeLog?.metadata as Record<string, unknown>}
+              onUpdate={(data) => onUpdateLogValue(habit.id, 1, data, selectedDate)}
             />
-          )}
-          {habit.title.toLowerCase().includes('read') && (
-             <div className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100 space-y-4">
-               <div className="flex items-center justify-between">
-                 <h3 className="text-lg font-bold text-zinc-900">Reading Progress</h3>
-                 <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                   <Calendar size={20} />
-                 </div>
-               </div>
-               <div className="flex items-center gap-4">
-                 <input 
-                   type="number"
-                   value={todayLog?.value || 0}
-                   onChange={(e) => onUpdateLogValue(habit.id, parseInt(e.target.value) || 0)}
-                   className="w-24 bg-white border border-zinc-200 rounded-xl p-3 text-xl font-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                 />
-                 <span className="text-zinc-500 font-bold uppercase tracking-wider text-xs">Minutes Read Today</span>
-               </div>
-             </div>
+          ) : (
+            <div className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-zinc-900">Quick Log</h3>
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg"
+                  style={{ backgroundColor: habit.color }}
+                >
+                  <TrendingUp size={20} />
+                </div>
+              </div>
+              
+              {habit.type === 'boolean' ? (
+                <button
+                  onClick={() => onUpdateLogValue(habit.id, activeLog ? 0 : 1, undefined, selectedDate)}
+                  className={cn(
+                    "w-full py-4 rounded-2xl font-bold transition-all border-2",
+                    activeLog 
+                      ? "bg-indigo-600 border-indigo-600 text-white" 
+                      : "bg-white border-zinc-200 text-zinc-400 hover:border-indigo-200"
+                  )}
+                >
+                  {activeLog ? 'Completed Today' : 'Mark as Complete'}
+                </button>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number"
+                        value={activeLog?.value || 0}
+                        onChange={(e) => onUpdateLogValue(habit.id, parseFloat(e.target.value) || 0, undefined, selectedDate)}
+                        className="w-full bg-white border border-zinc-200 rounded-xl p-3 text-xl font-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-zinc-500 font-bold uppercase tracking-wider text-xs">{habit.unit || 'units'}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {[1, 5, 10].map(val => (
+                        <button
+                          key={val}
+                          onClick={() => onUpdateLogValue(habit.id, (activeLog?.value || 0) + val, undefined, selectedDate)}
+                          className="flex-1 py-2 bg-white border border-zinc-200 rounded-lg text-[10px] font-bold text-zinc-500 hover:bg-zinc-50 transition-colors"
+                        >
+                          +{val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Target</p>
+                    <p className="text-lg font-black text-zinc-900">{habit.targetValue} {habit.unit}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -156,20 +205,23 @@ const HabitDetailsModal: React.FC<HabitDetailsModalProps> = ({
         <div className="space-y-4 mb-8">
           <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-400">Last 30 Days</h3>
           <div className="grid grid-cols-7 gap-2">
-            {last30Days.reverse().map((date, i) => {
+            {last30Days.reverse().map((date) => {
               const dateStr = format(date, 'yyyy-MM-dd');
               const isCompleted = habitLogs.some(l => l.date === dateStr);
+              const isSelected = selectedDate === dateStr;
               return (
-                <div 
+                <button 
                   key={dateStr}
+                  onClick={() => setSelectedDate(dateStr)}
                   className={cn(
-                    "aspect-square rounded-lg flex flex-col items-center justify-center transition-all",
-                    isCompleted ? "bg-indigo-600 text-white" : "bg-zinc-100 text-zinc-300"
+                    "aspect-square rounded-lg flex flex-col items-center justify-center transition-all border-2",
+                    isCompleted ? "bg-indigo-600 text-white border-indigo-600" : "bg-zinc-100 text-zinc-300 border-transparent",
+                    isSelected && "border-indigo-400 scale-110 shadow-lg z-10"
                   )}
                 >
                   <span className="text-[8px] font-bold uppercase">{format(date, 'EEE')}</span>
                   <span className="text-xs font-black">{format(date, 'd')}</span>
-                </div>
+                </button>
               );
             })}
           </div>

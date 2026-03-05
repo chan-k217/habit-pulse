@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'motion/react';
 interface WaterReminderProps {
   currentValue: number;
   targetValue: number;
+  nickname: string;
   lastLogTime?: number;
 }
 
-const WaterReminder: React.FC<WaterReminderProps> = ({ currentValue, targetValue, lastLogTime }) => {
+const WaterReminder: React.FC<WaterReminderProps> = ({ currentValue, targetValue, nickname, lastLogTime }) => {
   const [showReminder, setShowReminder] = useState(false);
 
   useEffect(() => {
@@ -42,7 +43,7 @@ const WaterReminder: React.FC<WaterReminderProps> = ({ currentValue, targetValue
             <Droplets size={20} />
           </div>
           <div className="flex-1">
-            <h4 className="text-sm font-bold">Time to Hydrate!</h4>
+            <h4 className="text-sm font-bold">Time to Hydrate, {nickname}!</h4>
             <p className="text-xs opacity-90">You haven't logged water in a while. Stay fresh!</p>
           </div>
           <button 

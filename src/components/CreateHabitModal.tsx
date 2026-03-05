@@ -1,10 +1,6 @@
 import React from 'react';
 import { 
   X, 
-  Bell, 
-  Calendar, 
-  Target, 
-  Type as TypeIcon,
   Clock
 } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -26,7 +22,10 @@ const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
 }) => {
   const [title, setTitle] = React.useState(initialHabit?.title || '');
   const [type, setType] = React.useState<HabitType>(initialHabit?.type || 'boolean');
+  const [category, setCategory] = React.useState<Habit['category']>(initialHabit?.category || 'health');
   const [targetValue, setTargetValue] = React.useState(initialHabit?.targetValue || 1);
+  const [unit, setUnit] = React.useState(initialHabit?.unit || '');
+  const [frequency, setFrequency] = React.useState<'daily' | 'weekly' | 'custom'>(initialHabit?.frequency || 'daily');
   const [reminderTime, setReminderTime] = React.useState(initialHabit?.reminderTime || '');
   const [selectedColor, setSelectedColor] = React.useState(initialHabit?.color || HABIT_COLORS[0]);
 
@@ -34,26 +33,29 @@ const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
     e.preventDefault();
     if (!title.trim()) return;
 
+    const habitData = {
+      title: title.trim(),
+      type,
+      category,
+      targetValue: Number(targetValue),
+      unit: unit.trim() || undefined,
+      frequency,
+      reminderTime: reminderTime || undefined,
+      color: selectedColor,
+    };
+
     if (initialHabit && onUpdate) {
       onUpdate({
         ...initialHabit,
-        title: title.trim(),
-        type,
-        targetValue,
-        reminderTime: reminderTime || undefined,
-        color: selectedColor,
+        ...habitData
       });
     } else {
       const newHabit: Habit = {
         id: crypto.randomUUID(),
-        title: title.trim(),
-        type,
-        targetValue,
-        frequency: 'daily',
-        reminderTime: reminderTime || undefined,
-        color: selectedColor,
+        ...habitData,
         createdAt: Date.now(),
-        streak: 0
+        streak: 0,
+        xp: 0
       };
       onAdd(newHabit);
     }
@@ -73,7 +75,7 @@ const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
-        className="relative w-full max-w-lg bg-white rounded-t-[32px] sm:rounded-[32px] p-8 shadow-2xl"
+        className="relative w-full max-w-lg bg-white rounded-t-[32px] sm:rounded-[32px] p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-zinc-900">
@@ -100,31 +102,79 @@ const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
             />
           </div>
 
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Category</label>
+            <div className="flex bg-zinc-50 p-1 rounded-xl border border-zinc-200 overflow-x-auto no-scrollbar">
+              {(['health', 'productivity', 'learning', 'wellness', 'lifestyle', 'finance'] as const).map((cat) => (
+                <button 
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategory(cat)}
+                  className={cn(
+                    "flex-shrink-0 px-4 py-2 text-[10px] font-bold rounded-lg transition-all capitalize",
+                    category === cat ? "bg-white shadow-sm text-indigo-600" : "text-zinc-500"
+                  )}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Goal Type</label>
+            <div className="flex bg-zinc-50 p-1 rounded-xl border border-zinc-200">
+              {(['boolean', 'count', 'duration', 'measurement'] as const).map((t) => (
+                <button 
+                  key={t}
+                  type="button"
+                  onClick={() => setType(t)}
+                  className={cn(
+                    "flex-1 py-2 text-[10px] font-bold rounded-lg transition-all capitalize",
+                    type === t ? "bg-white shadow-sm text-indigo-600" : "text-zinc-500"
+                  )}
+                >
+                  {t === 'boolean' ? 'Yes/No' : t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {type !== 'boolean' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Target</label>
+                <input 
+                  type="number"
+                  value={targetValue}
+                  onChange={(e) => setTargetValue(Number(e.target.value))}
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Unit</label>
+                <input 
+                  type="text"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  placeholder={type === 'duration' ? 'min' : 'times'}
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Type</label>
-              <div className="flex bg-zinc-50 p-1 rounded-xl border border-zinc-200">
-                <button 
-                  type="button"
-                  onClick={() => setType('boolean')}
-                  className={cn(
-                    "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
-                    type === 'boolean' ? "bg-white shadow-sm text-indigo-600" : "text-zinc-500"
-                  )}
-                >
-                  Yes/No
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setType('count')}
-                  className={cn(
-                    "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
-                    type === 'count' ? "bg-white shadow-sm text-indigo-600" : "text-zinc-500"
-                  )}
-                >
-                  Count
-                </button>
-              </div>
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Frequency</label>
+              <select 
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value as 'daily' | 'weekly' | 'custom')}
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+              </select>
             </div>
 
             <div className="space-y-2">
@@ -135,7 +185,7 @@ const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
                   type="time"
                   value={reminderTime}
                   onChange={(e) => setReminderTime(e.target.value)}
-                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-2 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                 />
               </div>
             </div>

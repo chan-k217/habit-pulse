@@ -7,20 +7,25 @@ import { cn } from '../lib/utils';
 interface HabitCardProps {
   habit: Habit;
   isCompleted: boolean;
+  currentValue?: number;
   hasNoteToday?: boolean;
   onToggle: () => void;
   onShowDetails: () => void;
 }
 
-const HabitCard: React.FC<HabitCardProps> = ({ 
+const HabitCard = React.forwardRef<HTMLDivElement, HabitCardProps>(({ 
   habit, 
   isCompleted, 
+  currentValue = 0,
   hasNoteToday,
   onToggle, 
   onShowDetails
-}) => {
+}, ref) => {
+  const progress = habit.targetValue > 0 ? Math.min((currentValue / habit.targetValue) * 100, 100) : 0;
+
   return (
     <motion.div 
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -51,27 +56,28 @@ const HabitCard: React.FC<HabitCardProps> = ({
           </button>
           
           <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.15em] mb-0.5">{habit.category}</p>
             <h3 className={cn(
-              "font-semibold text-zinc-900 truncate transition-all",
+              "font-bold text-zinc-900 truncate transition-all",
               isCompleted && "opacity-40 line-through"
             )}>
               {habit.title}
             </h3>
             <div className="flex items-center gap-3 mt-1">
-              <div className="flex items-center gap-1 text-xs font-medium text-orange-500">
-                <Flame size={14} fill="currentColor" />
-                <span>{habit.streak} day streak</span>
+              <div className="flex items-center gap-1 text-[10px] font-bold text-orange-500">
+                <Flame size={12} fill="currentColor" />
+                <span>{habit.streak}d</span>
               </div>
+              {habit.type !== 'boolean' && (
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  {currentValue} / {habit.targetValue} {habit.unit}
+                </span>
+              )}
               {hasNoteToday && (
                 <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-500 uppercase tracking-wider">
                   <MessageSquare size={10} />
                   <span>Journaled</span>
                 </div>
-              )}
-              {habit.reminderTime && !hasNoteToday && (
-                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">
-                  {habit.reminderTime}
-                </span>
               )}
             </div>
           </div>
@@ -88,13 +94,15 @@ const HabitCard: React.FC<HabitCardProps> = ({
       {habit.type !== 'boolean' && (
         <div className="mt-4 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-indigo-600 transition-all duration-500"
-            style={{ width: isCompleted ? '100%' : '0%' }}
+            className="h-full transition-all duration-500"
+            style={{ width: `${progress}%`, backgroundColor: habit.color }}
           />
         </div>
       )}
     </motion.div>
   );
-};
+});
+
+HabitCard.displayName = 'HabitCard';
 
 export default HabitCard;
